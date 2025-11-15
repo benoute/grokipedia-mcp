@@ -2,6 +2,10 @@
 
 A Go library and Model Context Protocol (MCP) server for accessing Grokipedia.
 
+## What is Grokipedia?
+
+Grokipedia is an AI-generated online encyclopedia launched by xAI, providing articles created primarily by Grok, xAI's large language model. It's positioned as an alternative to traditional encyclopedias with a focus on comprehensive, unbiased knowledge.
+
 ## Components
 
 This project provides two ways to interact with Grokipedia:
@@ -11,10 +15,6 @@ A standalone Go package for direct API access to Grokipedia's search and page re
 
 ### 🤖 MCP Server (`cmd/grokipedia-mcp`)
 An MCP-compatible server that exposes Grokipedia functionality as tools for AI assistants like Claude.
-
-## What is Grokipedia?
-
-Grokipedia is an AI-generated online encyclopedia launched by xAI, providing articles created primarily by Grok, xAI's large language model. It's positioned as an alternative to traditional encyclopedias with a focus on comprehensive, unbiased knowledge.
 
 ## Features
 
@@ -31,14 +31,6 @@ The MCP server exposes these as tools for AI assistants:
 - **`search_grokipedia`**: Search for articles with configurable limit/offset
 - **`get_grokipedia_page`**: Retrieve full page content by slug
 
-## Prerequisites
-
-### For the Go Library
-- Go 1.19 or later
-
-### For the MCP Server
-- Go 1.19 or later
-- Claude Desktop or another MCP-compatible client
 
 ## Installation
 
@@ -132,62 +124,9 @@ Once configured, Claude can use:
 - `get_grokipedia_page` - Retrieve full article content
 
 Example queries:
-- "Search Grokipedia for information about artificial intelligence"
-- "Get the full content of the Grok page"
-- "Find articles about quantum computing with 5 results"
-
-### Integrating with Claude Desktop
-
-To use this server with Claude Desktop:
-
-1. Open your Claude Desktop configuration file:
-   - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-   - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
-
-2. Add the server configuration:
-
-```json
-{
-  "mcpServers": {
-    "grokipedia": {
-      "command": "/absolute/path/to/grokipedia-mcp",
-      "args": [],
-      "env": {}
-    }
-  }
-}
-```
-
-Replace `/absolute/path/to/grokipedia-mcp` with the actual path to the built binary.
-
-3. Restart Claude Desktop
-
-4. The `search_grokipedia` tool should now be available in Claude Desktop
-
-### Using the tools
-
-Once configured, you can ask Claude questions like:
 - "Search for information about artificial intelligence"
 - "What is quantum computing?"
 - "Find articles on climate change"
 - "Get the full content of the United_Petroleum page"
 - "Read the article about Python programming"
-
-## How it works
-
-### Go Library
-The `pkg/grokipedia` package provides direct HTTP client access to Grokipedia's API endpoints:
-
-- **Search API**: `https://grokipedia.com/api/full-text-search?query={query}&limit={limit}&offset={offset}`
-- **Page API**: `https://grokipedia.com/api/page?slug={slug}&includeContent=true&validateLinks=true`
-
-The library handles JSON marshaling, HTTP requests, and response parsing with proper error handling.
-
-### MCP Server
-The MCP server (`cmd/grokipedia-mcp`) wraps the Go library and exposes it via the Model Context Protocol:
-
-- Implements MCP protocol using the official Go SDK
-- Registers tools that map to library functions
-- Handles tool calls and formats responses for AI assistants
-- Includes proper error handling and structured output
 
