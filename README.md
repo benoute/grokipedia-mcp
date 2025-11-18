@@ -20,9 +20,10 @@ An MCP-compatible server that exposes Grokipedia functionality as tools for AI a
 
 Both the library and MCP server provide access to:
 
-1. **🔍 Full-text search**: Find articles by querying Grokipedia's search API
-2. **📄 Page retrieval**: Get complete article content, titles, and citations
+1. **🔍 Full-text search**: Find articles by querying Grokipedia's search API with relevance scores and snippets
+2. **📄 Page retrieval**: Get complete article content, titles, citations, images, and metadata
 3. **⚙️ Configurable parameters**: Set custom limits and offsets for search results
+4. **🚀 Performance options**: Retrieve page metadata without full content for faster responses
 
 ### MCP Tools
 
@@ -52,7 +53,7 @@ go build -o grokipedia-mcp ./cmd/grokipedia-mcp
 
 **Go Library:** Add to your project with:
 ```bash
-go get github.com/benoute/grokipedia-client-go/pkg/grokipedia
+go get github.com/benoute/grokipedia/pkg/grokipedia
 ```
 
 ## Usage
@@ -62,28 +63,31 @@ go get github.com/benoute/grokipedia-client-go/pkg/grokipedia
 Add the package to your Go project:
 
 ```bash
-go get github.com/benoute/grokipedia-client-go/pkg/grokipedia
+go get github.com/benoute/grokipedia/pkg/grokipedia
 ```
 
 ```go
-import "github.com/benoute/grokipedia-client-go/pkg/grokipedia"
+import "github.com/benoute/grokipedia/pkg/grokipedia"
 
 // Search with default parameters (limit: 10, offset: 0)
-output, err := grokipedia.Search(context.Background(), "quantum computing")
+results, err := grokipedia.Search(context.Background(), "quantum computing")
 if err != nil {
     // handle error
 }
-// output.Results contains slugs of matching pages
+// results contains SearchResult structs with Title, Slug, Snippet, RelevanceScore
 
 // Search with custom limit and offset
-output, err := grokipedia.Search(context.Background(), "artificial intelligence", grokipedia.WithLimit(20), grokipedia.WithOffset(10))
+results, err := grokipedia.Search(context.Background(), "artificial intelligence", grokipedia.WithLimit(20), grokipedia.WithOffset(10))
 
 // Get full page content
 page, err := grokipedia.GetPage(context.Background(), "Quantum_computing")
 if err != nil {
     // handle error
 }
-// page contains Title, Content, Citations
+// page contains Title, Content, Citations, Images, Metadata, Slug
+
+// Get page without content (metadata only)
+page, err := grokipedia.GetPage(context.Background(), "Quantum_computing", grokipedia.WithoutContent())
 ```
 
 ### 🤖 Using the MCP Server
@@ -116,8 +120,8 @@ go build -o grokipedia-mcp ./cmd/grokipedia-mcp
 #### Available Tools
 
 Once configured, Claude can use:
-- `search_grokipedia` - Search with optional limit/offset parameters
-- `get_grokipedia_page` - Retrieve full article content
+- `search_grokipedia` - Search with optional limit/offset parameters, returns titles, snippets, and relevance scores
+- `get_grokipedia_page` - Retrieve full article content, citations, images, and metadata
 
 Example queries:
 - "Search for information about artificial intelligence"
