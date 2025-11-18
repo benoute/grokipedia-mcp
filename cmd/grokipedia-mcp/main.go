@@ -6,66 +6,102 @@ import (
 	"log"
 	"strings"
 
-	"github.com/benoute/grokipedia-client-go/pkg/grokipedia"
+	"github.com/benoute/grokipedia/pkg/grokipedia"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func SearchGrokipedia(ctx context.Context, req *mcp.CallToolRequest, input grokipedia.SearchInput) (
+type SearchToolInput struct {
+	Query  string `json:"query"`
+	Limit  int    `json:"limit,omitempty"`
+	Offset int    `json:"offset,omitempty"`
+}
+
+type SearchToolOutput struct {
+	Results []grokipedia.SearchResult `json:"results"`
+}
+
+type GetPageToolInput struct {
+	Slug string `json:"slug"`
+}
+
+func SearchGrokipedia(ctx context.Context, req *mcp.CallToolRequest, input SearchToolInput) (
 	*mcp.CallToolResult,
-	grokipedia.SearchOutput,
+	*SearchToolOutput,
 	error,
 ) {
-	output, err := grokipedia.Search(ctx, input)
+	var opts []grokipedia.SearchOption
+	if input.Limit > 0 {
+		opts = append(opts, grokipedia.WithLimit(input.Limit))
+	}
+	if input.Offset > 0 {
+		opts = append(opts, grokipedia.WithOffset(input.Offset))
+	}
+
+	results, err := grokipedia.Search(ctx, input.Query, opts...)
 	if err != nil {
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{
 				&mcp.TextContent{Text: err.Error()},
 			},
 			IsError: true,
-		}, grokipedia.SearchOutput{}, nil
+		}, nil, nil
 	}
 
-	// Format the display text (simplified, as full formatting was moved to library but we have structured data)
+	// Format the display text
 	var contentLines []string
 	contentLines = append(contentLines, fmt.Sprintf("Search results for '%s':", input.Query))
 	contentLines = append(contentLines, "")
-	for i, slug := range output.Results {
-		contentLines = append(contentLines, fmt.Sprintf("%d. %s", i+1, slug))
+	for i, result := range results {
+		contentLines = append(
+			contentLines,
+			fmt.Sprintf("%d. %s (slug: %s)", i+1, result.Title, result.Slug),
+		)
+		if len(result.Snippet) > 0 {
+			contentLines = append(contentLines, fmt.Sprintf("   %s", result.Snippet))
+		}
+		contentLines = append(contentLines, "")
+	}
+
+	searchToolOutput := SearchToolOutput{
+		Results: results,
 	}
 
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
 			&mcp.TextContent{Text: strings.Join(contentLines, "\n")},
 		},
-	}, output, nil
+	}, &searchToolOutput, nil
 }
 
-func GetGrokipediaPage(ctx context.Context, req *mcp.CallToolRequest, input grokipedia.GetPageInput) (
+func GetGrokipediaPage(ctx context.Context, req *mcp.CallToolRequest, input GetPageToolInput) (
 	*mcp.CallToolResult,
-	grokipedia.GetPageOutput,
+	*grokipedia.Page,
 	error,
 ) {
-	output, err := grokipedia.GetPage(ctx, input.Slug)
+	page, err := grokipedia.GetPage(ctx, input.Slug)
 	if err != nil {
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{
 				&mcp.TextContent{Text: err.Error()},
 			},
 			IsError: true,
-		}, grokipedia.GetPageOutput{}, nil
+		}, nil, nil
 	}
 
 	// Format the display text
 	var contentLines []string
-	contentLines = append(contentLines, fmt.Sprintf("# %s", output.Title))
+	contentLines = append(contentLines, fmt.Sprintf("# %s", page.Title))
 	contentLines = append(contentLines, "")
-	contentLines = append(contentLines, output.Content)
+	contentLines = append(contentLines, page.Content)
 
-	if len(output.Citations) > 0 {
+	if len(page.Citations) > 0 {
 		contentLines = append(contentLines, "")
 		contentLines = append(contentLines, "## Citations")
-		for _, citation := range output.Citations {
-			contentLines = append(contentLines, fmt.Sprintf("[%s] %s - %s", citation.ID, citation.Title, citation.URL))
+		for _, citation := range page.Citations {
+			contentLines = append(
+				contentLines,
+				fmt.Sprintf("[%s] %s - %s", citation.ID, citation.Title, citation.URL),
+			)
 		}
 	}
 
@@ -73,7 +109,7 @@ func GetGrokipediaPage(ctx context.Context, req *mcp.CallToolRequest, input grok
 		Content: []mcp.Content{
 			&mcp.TextContent{Text: strings.Join(contentLines, "\n")},
 		},
-	}, output, nil
+	}, page, nil
 }
 
 func main() {
@@ -82,14 +118,16 @@ func main() {
 
 	// Add search tool
 	mcp.AddTool(server, &mcp.Tool{
-		Name:        "search_grokipedia",
-		Description: "Search an AI-generated online encyclopedia for articles and information on various topics, providing titles, snippets, and metadata",
+		Name: "search_grokipedia",
+		Description: "Search Grokipedia online encyclopedia for articles and information " +
+			"on various topics, providing titles, snippets, and metadata",
 	}, SearchGrokipedia)
 
 	// Add page retrieval tool
 	mcp.AddTool(server, &mcp.Tool{
-		Name:        "get_grokipedia_page",
-		Description: "Retrieve the full content of a specific encyclopedia page by its identifier, including title, content, and citations",
+		Name: "get_grokipedia_page",
+		Description: "Retrieve the full content of a specific Grokipedia encyclopedia page by " +
+			"its identifier, including title, content, and citations",
 	}, GetGrokipediaPage)
 
 	// Run the server over stdin/stdout

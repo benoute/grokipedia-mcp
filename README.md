@@ -69,18 +69,14 @@ go get github.com/benoute/grokipedia-client-go/pkg/grokipedia
 import "github.com/benoute/grokipedia-client-go/pkg/grokipedia"
 
 // Search with default parameters (limit: 10, offset: 0)
-output, err := grokipedia.Search(context.Background(), grokipedia.SearchInput{Query: "quantum computing"})
+output, err := grokipedia.Search(context.Background(), "quantum computing")
 if err != nil {
     // handle error
 }
 // output.Results contains slugs of matching pages
 
 // Search with custom limit and offset
-output, err := grokipedia.Search(context.Background(), grokipedia.SearchInput{
-    Query:  "artificial intelligence",
-    Limit:  20,
-    Offset: 10,
-})
+output, err := grokipedia.Search(context.Background(), "artificial intelligence", grokipedia.WithLimit(20), grokipedia.WithOffset(10))
 
 // Get full page content
 page, err := grokipedia.GetPage(context.Background(), "Quantum_computing")

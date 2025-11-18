@@ -1,4 +1,4 @@
-module github.com/benoute/grokipedia-client-go
+module github.com/benoute/grokipedia
 
 go 1.23.0
 
