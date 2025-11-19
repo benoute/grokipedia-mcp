@@ -114,7 +114,7 @@ func getGrokipediaPage(ctx context.Context, req *mcp.CallToolRequest, input getP
 // setupMCPServer creates and configures the MCP server with Grokipedia tools
 func setupMCPServer() *mcp.Server {
 	// Create a server with search and page retrieval tools
-	server := mcp.NewServer(&mcp.Implementation{Name: "grokipedia-mcp", Version: "v1.2.3"}, nil)
+	server := mcp.NewServer(&mcp.Implementation{Name: "grokipedia-mcp", Version: "v1.2.4"}, nil)
 
 	// Add search tool
 	mcp.AddTool(server, &mcp.Tool{

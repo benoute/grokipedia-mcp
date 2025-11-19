@@ -14,22 +14,41 @@ jobs:
         include:
           - os: linux
             arch: amd64
+            target: x86_64-linux-musl
           - os: linux
             arch: arm64
+            target: aarch64-linux-musl
           - os: darwin
             arch: amd64
+            target: x86_64-macos-none
           - os: darwin
             arch: arm64
+            target: aarch64-macos-none
     steps:
       - uses: actions/checkout@v4
+      - name: Install Zig
+        run: |
+          wget -q https://ziglang.org/download/0.15.2/zig-linux-x86_64-0.15.2.tar.xz
+          tar -xf zig-linux-x86_64-0.15.2.tar.xz
+          mv zig-linux-x86_64-0.15.2 /usr/local/zig
+          export PATH=$PATH:/usr/local/zig
+          echo "PATH=$PATH:/usr/local/zig" >> $GITHUB_ENV
       - name: Build
         run: |
+          extldflags=""
           if [ "${{ matrix.os }}" == "linux" ]; then
-            apk add --no-cache musl-dev build-base && \
-            CGO_ENABLED=1 CC=gcc GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -ldflags '-linkmode external -extldflags "-static"' -o grokipedia-mcp-${{ matrix.os }}-${{ matrix.arch }} ./cmd/grokipedia-mcp
-          else
-            GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -o grokipedia-mcp-${{ matrix.os }}-${{ matrix.arch }} ./cmd/grokipedia-mcp
+            extldflags="-static"
           fi
+          CGO_ENABLED=1 \
+          CC="zig cc -target ${{ matrix.target }}" \
+          CXX="zig c++ -target ${{ matrix.target }}" \
+          GOOS=${{ matrix.os }} \
+          GOARCH=${{ matrix.arch }} \
+          go build \
+            -ldflags \
+            "-linkmode external -extldflags \"$extldflags\"" \
+            -o grokipedia-mcp-${{ matrix.os }}-${{ matrix.arch }} \
+            ./cmd/grokipedia-mcp
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
