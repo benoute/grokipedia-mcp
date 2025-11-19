@@ -1,4 +1,4 @@
-module github.com/benoute/grokipedia
+module github.com/benoute/grokipedia-mcp
 
 go 1.23.0
 

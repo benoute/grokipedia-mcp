@@ -1,107 +1,44 @@
-# Grokipedia Client
+# Grokipedia MCP Server
 
-A Go library and Model Context Protocol (MCP) server for accessing Grokipedia.
+A Model Context Protocol (MCP) server for accessing Grokipedia, an online encyclopedia by xAI.
 
 ## What is Grokipedia?
 
-Grokipedia is an AI-generated online encyclopedia launched by xAI, providing articles created primarily by Grok, xAI's large language model. It's positioned as an alternative to traditional encyclopedias with a focus on comprehensive, unbiased knowledge.
+Grokipedia is an AI-generated online encyclopedia launched by xAI, providing articles created primarily
+by Grok, xAI's large language model. It's positioned as an alternative to traditional encyclopedias
+with a focus on comprehensive, unbiased knowledge.
 
-## Components
+## Overview
 
-This project provides two ways to interact with Grokipedia:
-
-### 📚 Go Library (`pkg/grokipedia`)
-A standalone Go package for direct API access to Grokipedia's search and page retrieval functionality.
-
-### 🤖 MCP Server (`cmd/grokipedia-mcp`)
-An MCP-compatible server that exposes Grokipedia functionality as tools for AI assistants like Claude.
+This project provides an MCP-compatible server that exposes Grokipedia functionality as tools for AI
+assistants like Claude. It also includes a Go library for direct API access.
 
 ## Features
 
-Both the library and MCP server provide access to:
+The MCP server provides access to Grokipedia through the following tools:
 
-1. **🔍 Full-text search**: Find articles by querying Grokipedia's search API with relevance scores and snippets
+- **`search_grokipedia`**: Full-text search for articles with relevance scores, snippets, and
+  configurable limit/offset
+- **`get_grokipedia_page`**: Retrieve complete article content, titles, citations, images, and
+  metadata
+
+Key capabilities:
+1. **🔍 Full-text search**: Query Grokipedia's search API with relevance scores and snippets
 2. **📄 Page retrieval**: Get complete article content, titles, citations, images, and metadata
 3. **⚙️ Configurable parameters**: Set custom limits and offsets for search results
-4. **🚀 Performance options**: Retrieve page metadata without full content for faster responses
-
-### MCP Tools
-
-The MCP server exposes these as tools for AI assistants:
-
-- **`search_grokipedia`**: Search for articles with configurable limit/offset
-- **`get_grokipedia_page`**: Retrieve full page content by slug
 
 
-## Installation
+### Building the MCP Server
 
-1. Clone or download this repository
-2. Navigate to the project directory
-3. Install dependencies:
-   ```bash
-   go mod tidy
-   ```
-
-### Building the Components
-
-**MCP Server:**
 ```bash
 make build
-# or
-go build -o grokipedia-mcp ./cmd/grokipedia-mcp
-```
-
-**Go Library:** Add to your project with:
-```bash
-go get github.com/benoute/grokipedia/pkg/grokipedia
 ```
 
 ## Usage
 
-### 📚 Using the Go Library
+### Configuration
 
-Add the package to your Go project:
-
-```bash
-go get github.com/benoute/grokipedia/pkg/grokipedia
-```
-
-```go
-import "github.com/benoute/grokipedia/pkg/grokipedia"
-
-// Search with default parameters (limit: 10, offset: 0)
-results, err := grokipedia.Search(context.Background(), "quantum computing")
-if err != nil {
-    // handle error
-}
-// results contains SearchResult structs with Title, Slug, Snippet, RelevanceScore
-
-// Search with custom limit and offset
-results, err := grokipedia.Search(context.Background(), "artificial intelligence", grokipedia.WithLimit(20), grokipedia.WithOffset(10))
-
-// Get full page content
-page, err := grokipedia.GetPage(context.Background(), "Quantum_computing")
-if err != nil {
-    // handle error
-}
-// page contains Title, Content, Citations, Images, Metadata, Slug
-
-// Get page without content (metadata only)
-page, err := grokipedia.GetPage(context.Background(), "Quantum_computing", grokipedia.WithoutContent())
-```
-
-### 🤖 Using the MCP Server
-
-#### Installation & Setup
-
-1. Build the server:
-```bash
-make build
-# or
-go build -o grokipedia-mcp ./cmd/grokipedia-mcp
-```
-
-2. Configure Claude Desktop by adding to `claude_desktop_config.json`:
+1. Configure Claude Desktop by adding to `claude_desktop_config.json`:
 
 ```json
 {
@@ -115,18 +52,19 @@ go build -o grokipedia-mcp ./cmd/grokipedia-mcp
 }
 ```
 
-3. Restart Claude Desktop
+2. Restart Claude Desktop
 
 #### Available Tools
 
 Once configured, Claude can use:
-- `search_grokipedia` - Search with optional limit/offset parameters, returns titles, snippets, and relevance scores
+- `search_grokipedia` - Search with optional limit/offset parameters, returns titles, snippets, and
+  relevance scores
 - `get_grokipedia_page` - Retrieve full article content, citations, images, and metadata
 
 Example queries:
 - "Search for information about artificial intelligence"
 - "What is quantum computing?"
-- "Find articles on climate change"
+- "Find articles on nuclear energy"
 - "Get the full content of the United_Petroleum page"
-- "Read the article about Python programming"
+- "Read the article about Go programming"
 

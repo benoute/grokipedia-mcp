@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/benoute/grokipedia/pkg/grokipedia"
+	"github.com/benoute/grokipedia-mcp/pkg/grokipedia"
 )
 
 func main() {

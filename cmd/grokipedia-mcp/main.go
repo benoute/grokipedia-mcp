@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/benoute/grokipedia/pkg/grokipedia"
+	"github.com/benoute/grokipedia-mcp/pkg/grokipedia"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 

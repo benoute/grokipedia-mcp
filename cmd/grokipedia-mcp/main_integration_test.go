@@ -9,7 +9,7 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-func TestMCPToolsIntegration(t *testing.T) {
+func TestIntegrationMCP(t *testing.T) {
 	// // Build the server binary first
 	// if err := exec.Command("go", "build", "-o", "grokipedia-mcp-test").Run(); err != nil {
 	// 	t.Fatalf("Failed to build server: %v", err)
@@ -63,7 +63,7 @@ func TestMCPToolsIntegration(t *testing.T) {
 		params := &mcp.CallToolParams{
 			Name: "search_grokipedia",
 			Arguments: map[string]any{
-				"query": "bitcoin",
+				"query": "Grok",
 			},
 		}
 
