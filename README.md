@@ -54,6 +54,15 @@ make build
 
 2. Restart Claude Desktop
 
+### Command-Line Options
+
+The MCP server supports the following command-line options:
+
+- `-transport`: Transport mode for the server
+  - `stdio` (default): Use standard input/output for communication (recommended for Claude Desktop)
+  - `http`: Run as an HTTP server
+- `-port`: Port to listen on when using HTTP transport (default: 8080)
+
 #### Available Tools
 
 Once configured, Claude can use:

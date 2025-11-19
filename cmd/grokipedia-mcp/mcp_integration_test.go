@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"os/exec"
 	"testing"
 	"time"
 
@@ -10,11 +9,8 @@ import (
 )
 
 func TestIntegrationMCP(t *testing.T) {
-	// // Build the server binary first
-	// if err := exec.Command("go", "build", "-o", "grokipedia-mcp-test").Run(); err != nil {
-	// 	t.Fatalf("Failed to build server: %v", err)
-	// }
-	// defer exec.Command("rm", "grokipedia-mcp-test").Run()
+	// Create MCP server in-process
+	server := setupMCPServer()
 
 	// Create MCP client that connects to our server
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -22,12 +18,15 @@ func TestIntegrationMCP(t *testing.T) {
 
 	client := mcp.NewClient(&mcp.Implementation{Name: "test-client", Version: "1.0.0"}, nil)
 
-	// Connect to the server using CommandTransport
-	transport := &mcp.CommandTransport{
-		// Command: exec.Command("./grokipedia-mcp-test"),
-		Command: exec.Command("go", "run", "."),
+	// Connect server and client using InMemoryTransport
+	t1, t2 := mcp.NewInMemoryTransports()
+	serverSession, err := server.Connect(ctx, t1, nil)
+	if err != nil {
+		t.Fatalf("Failed to connect server: %v", err)
 	}
-	session, err := client.Connect(ctx, transport, nil)
+	defer serverSession.Close()
+
+	session, err := client.Connect(ctx, t2, nil)
 	if err != nil {
 		t.Fatalf("Failed to connect to MCP server: %v", err)
 	}
