@@ -46,35 +46,35 @@ func searchGrokipedia(ctx context.Context, req *mcp.CallToolRequest, input searc
 		}, nil, nil
 	}
 
-	// Format the display text
-	var contentLines []string
-	contentLines = append(contentLines, fmt.Sprintf("Search results for '%s':", input.Query))
-	contentLines = append(contentLines, "")
-	for i, result := range results {
-		contentLines = append(
-			contentLines,
-			fmt.Sprintf("%d. %s (slug: %s)", i+1, result.Title, result.Slug),
-		)
-		if len(result.Snippet) > 0 {
-			contentLines = append(contentLines, fmt.Sprintf("   %s", result.Snippet))
-		}
-		contentLines = append(contentLines, "")
-	}
+	// // Format the display text
+	// var contentLines []string
+	// contentLines = append(contentLines, fmt.Sprintf("Search results for '%s':", input.Query))
+	// contentLines = append(contentLines, "")
+	// for i, result := range results {
+	// 	contentLines = append(
+	// 		contentLines,
+	// 		fmt.Sprintf("%d. %s (slug: %s)", i+1, result.Title, result.Slug),
+	// 	)
+	// 	if len(result.Snippet) > 0 {
+	// 		contentLines = append(contentLines, fmt.Sprintf("   %s", result.Snippet))
+	// 	}
+	// 	contentLines = append(contentLines, "")
+	// }
 
 	searchToolOutput := searchToolOutput{
 		Results: results,
 	}
 
 	return &mcp.CallToolResult{
-		Content: []mcp.Content{
-			&mcp.TextContent{Text: strings.Join(contentLines, "\n")},
-		},
+		// Content: []mcp.Content{
+		// 	&mcp.TextContent{Text: strings.Join(contentLines, "\n")},
+		// },
 	}, &searchToolOutput, nil
 }
 
 func getGrokipediaPage(ctx context.Context, req *mcp.CallToolRequest, input getPageToolInput) (
 	*mcp.CallToolResult,
-	*grokipedia.Page,
+	any,
 	error,
 ) {
 	page, err := grokipedia.GetPage(ctx, input.Slug)
@@ -88,19 +88,25 @@ func getGrokipediaPage(ctx context.Context, req *mcp.CallToolRequest, input getP
 	}
 
 	// Format the display text
-	var contentLines []string
-	contentLines = append(contentLines, fmt.Sprintf("# %s", page.Title))
-	contentLines = append(contentLines, "")
+	contentLines := make([]string, 0, 3+len(page.Citations))
 	contentLines = append(contentLines, page.Content)
 
 	if len(page.Citations) > 0 {
 		contentLines = append(contentLines, "")
 		contentLines = append(contentLines, "## Citations")
 		for _, citation := range page.Citations {
-			contentLines = append(
-				contentLines,
-				fmt.Sprintf("[%s] %s - %s", citation.ID, citation.Title, citation.URL),
-			)
+			if len(citation.Title) > 0 {
+				contentLines = append(
+					contentLines,
+					fmt.Sprintf("%s. [%s](%s)", citation.ID, citation.Title, citation.URL),
+				)
+			} else {
+				contentLines = append(
+					contentLines,
+					fmt.Sprintf("%s. <%s>", citation.ID, citation.URL),
+				)
+			}
+
 		}
 	}
 
@@ -108,7 +114,7 @@ func getGrokipediaPage(ctx context.Context, req *mcp.CallToolRequest, input getP
 		Content: []mcp.Content{
 			&mcp.TextContent{Text: strings.Join(contentLines, "\n")},
 		},
-	}, page, nil
+	}, nil, nil
 }
 
 // setupMCPServer creates and configures the MCP server with Grokipedia tools

@@ -10,12 +10,17 @@ import (
 	"time"
 )
 
-type SearchOption func(*searchOptions)
-
 type searchOptions struct {
 	Limit  int
 	Offset int
 }
+
+var defaultSearchOptions = searchOptions{
+	Limit:  10,
+	Offset: 0,
+}
+
+type SearchOption func(*searchOptions)
 
 func WithLimit(limit int) SearchOption {
 	return func(opts *searchOptions) {
@@ -36,17 +41,15 @@ type SearchResult struct {
 	RelevanceScore float64 `json:"relevanceScore"`
 }
 
-type responseData struct {
-	Results    []SearchResult `json:"results"`
-	TotalCount int            `json:"total_count"`
-}
+func Search(
+	ctx context.Context,
+	query string,
+	opts ...SearchOption,
+) ([]SearchResult, error) {
+	// Ddefault options
+	options := defaultSearchOptions
 
-func Search(ctx context.Context, query string, opts ...SearchOption) ([]SearchResult, error) {
-	// Set defaults
-	options := searchOptions{
-		Limit:  10,
-		Offset: 0,
-	}
+	// Apply options
 	for _, opt := range opts {
 		opt(&options)
 	}
@@ -62,6 +65,7 @@ func Search(ctx context.Context, query string, opts ...SearchOption) ([]SearchRe
 	timeoutCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
+	// Make request
 	req, err := http.NewRequestWithContext(timeoutCtx, "GET", searchURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %w", err)
@@ -72,11 +76,16 @@ func Search(ctx context.Context, query string, opts ...SearchOption) ([]SearchRe
 	}
 	defer resp.Body.Close()
 
+	// Handle non-200 status
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("API error: HTTP %d", resp.StatusCode)
 	}
 
-	var res responseData
+	// Decode JSON response
+	var res struct {
+		Results    []SearchResult `json:"results"`
+		TotalCount int            `json:"total_count"`
+	}
 	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
 		return nil, fmt.Errorf("error parsing API response: %w", err)
 	}

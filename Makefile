@@ -9,9 +9,6 @@ test:
 clean:
 	rm -f grokipedia-mcp
 
-run: build
-	./grokipedia-mcp
-
 fmt:
 	go fmt ./...
 

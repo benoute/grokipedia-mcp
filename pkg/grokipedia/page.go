@@ -11,38 +11,6 @@ import (
 	"time"
 )
 
-type pageOptions struct {
-	includeContent bool
-}
-
-type PageOption func(*pageOptions)
-
-func WithoutContent() PageOption {
-	return func(opts *pageOptions) {
-		opts.includeContent = false
-	}
-}
-
-type GetPageOutput struct {
-	Title     string     `json:"title" jsonschema:"The page title"`
-	Content   string     `json:"content" jsonschema:"The full page content"`
-	Citations []citation `json:"citations" jsonschema:"List of citations"`
-}
-
-type ResponseData struct {
-	Page  Page `json:"page"`
-	Found bool `json:"found"`
-}
-
-type Page struct {
-	Title     string     `json:"title"`
-	Content   string     `json:"content"`
-	Citations []citation `json:"citations"`
-	Images    []image    `json:"images"`
-	Metadata  metadata   `json:"metadata"`
-	Slug      string     `json:"slug"`
-}
-
 type citation struct {
 	ID    string `json:"id"`
 	Title string `json:"title"`
@@ -61,13 +29,38 @@ type metadata struct {
 	Views     int    `json:"views"`
 }
 
+type Page struct {
+	Title     string     `json:"title"`
+	Content   string     `json:"content"`
+	Citations []citation `json:"citations"`
+	Images    []image    `json:"images"`
+	Metadata  metadata   `json:"metadata"`
+	Slug      string     `json:"slug"`
+}
+
 var ErrNotFound = errors.New("page not found")
 
-func GetPage(ctx context.Context, slug string, opts ...PageOption) (*Page, error) {
-	options := pageOptions{
-		includeContent: true,
-	}
+type pageOptions struct {
+	includeContent bool
+}
 
+var defaultPageOptions = pageOptions{
+	includeContent: true,
+}
+
+type PageOption func(*pageOptions)
+
+func WithoutContent() PageOption {
+	return func(opts *pageOptions) {
+		opts.includeContent = false
+	}
+}
+
+func GetPage(ctx context.Context, slug string, opts ...PageOption) (*Page, error) {
+	// Default options
+	options := defaultPageOptions
+
+	// Apply options
 	for _, opt := range opts {
 		opt(&options)
 	}
@@ -82,6 +75,7 @@ func GetPage(ctx context.Context, slug string, opts ...PageOption) (*Page, error
 	timeoutCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
+	// Make request
 	req, err := http.NewRequestWithContext(timeoutCtx, "GET", pageURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %w", err)
@@ -92,6 +86,7 @@ func GetPage(ctx context.Context, slug string, opts ...PageOption) (*Page, error
 	}
 	defer resp.Body.Close()
 
+	// Handle non-200 status
 	if resp.StatusCode != http.StatusOK {
 		msg, err := io.ReadAll(resp.Body)
 		if err != nil && len(msg) > 0 {
@@ -100,7 +95,12 @@ func GetPage(ctx context.Context, slug string, opts ...PageOption) (*Page, error
 		return nil, fmt.Errorf("API error: HTTP %d", resp.StatusCode)
 	}
 
-	var res ResponseData
+	// Decode JSON response
+	var res struct {
+		Page  Page `json:"page"`
+		Found bool `json:"found"`
+	}
+
 	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
 		return nil, fmt.Errorf("error parsing API response: %w", err)
 	}
