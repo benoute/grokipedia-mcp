@@ -16,34 +16,34 @@ func TestParseFlags(t *testing.T) {
 	}()
 
 	tests := []struct {
-		name              string
-		args              []string
-		expectedTransport string
-		expectedPort      string
+		name         string
+		args         []string
+		expectedHttp bool
+		expectedPort string
 	}{
 		{
-			name:              "default values",
-			args:              []string{"cmd"},
-			expectedTransport: "stdio",
-			expectedPort:      "8080",
+			name:         "default values",
+			args:         []string{"cmd"},
+			expectedHttp: false,
+			expectedPort: "8080",
 		},
 		{
-			name:              "custom transport and port",
-			args:              []string{"cmd", "-transport", "http", "-port", "9090"},
-			expectedTransport: "http",
-			expectedPort:      "9090",
+			name:         "http mode with custom port",
+			args:         []string{"cmd", "-http", "-port", "9090"},
+			expectedHttp: true,
+			expectedPort: "9090",
 		},
 		{
-			name:              "only transport",
-			args:              []string{"cmd", "-transport", "http"},
-			expectedTransport: "http",
-			expectedPort:      "8080",
+			name:         "only http flag",
+			args:         []string{"cmd", "-http"},
+			expectedHttp: true,
+			expectedPort: "8080",
 		},
 		{
-			name:              "only port",
-			args:              []string{"cmd", "-port", "7070"},
-			expectedTransport: "stdio",
-			expectedPort:      "7070",
+			name:         "only port",
+			args:         []string{"cmd", "-port", "7070"},
+			expectedHttp: false,
+			expectedPort: "7070",
 		},
 	}
 
@@ -53,10 +53,10 @@ func TestParseFlags(t *testing.T) {
 			flag.CommandLine = flag.NewFlagSet(tt.args[0], flag.ContinueOnError)
 			os.Args = tt.args
 
-			transport, port := parseFlags()
+			isHttp, port := parseFlags()
 
-			if transport != tt.expectedTransport {
-				t.Errorf("Expected transport %s, got %s", tt.expectedTransport, transport)
+			if isHttp != tt.expectedHttp {
+				t.Errorf("Expected http %v, got %v", tt.expectedHttp, isHttp)
 			}
 			if port != tt.expectedPort {
 				t.Errorf("Expected port %s, got %s", tt.expectedPort, port)
