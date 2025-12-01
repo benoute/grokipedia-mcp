@@ -1,17 +1,11 @@
 # Grokipedia MCP Server
 
-A Model Context Protocol (MCP) server for accessing Grokipedia, an online encyclopedia by xAI.
-
-## What is Grokipedia?
-
-Grokipedia is an AI-generated online encyclopedia launched by xAI, providing articles created primarily
-by Grok, xAI's large language model. It's positioned as an alternative to traditional encyclopedias
-with a focus on comprehensive, unbiased knowledge.
+A Model Context Protocol (MCP) server for accessing Grokipedia, the online encyclopedia by xAI.
 
 ## Overview
 
-This project provides an MCP-compatible server that exposes Grokipedia functionality as tools for AI
-assistants like Claude. It also includes a Go library for direct API access.
+This project provides an MCP server that exposes Grokipedia functionality as tools.
+It also includes a Go library for direct API access.
 
 ## Features
 
